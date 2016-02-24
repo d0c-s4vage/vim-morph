@@ -1,0 +1,35 @@
+# Each Morph must start with the Morph or Morph! keyword followed by one or more
+# comma-separated file types (no spaces), and must end with the MorphEnd
+# keyword. Comments are allowed in the Morph body.
+# 
+# The first non-comment and non-empty line in the Morph will be used as the
+# morph command.
+# 
+# The second non-comment and non-empty line in the Morph will be used as the
+# restore command, if the morph type is Morph (not Morph!).
+# 
+# Both the morph and restore commands will be interpreted by bash (ie you can
+# use env variables, etc.)
+# 
+# All leading and trailing whitespace will be stripped from the command,
+# and all whitespace inside the command will be reduced to a single space
+# (ie two spaces will be reduced to one).
+#
+# If fewer than two commands are found within the Morph body, the Morph will
+# be ignored.
+#
+# Morph!s perform an inline transformation on the buffer's contents with each
+# file write, as opposed to providing a view into an encrypted/encoded file.
+# As such, Morph!s do not make use of a restore command.
+
+Morph *.b64,*.base64
+	# morph
+	base64
+
+	# restore
+	base64 -d
+MorphEnd
+
+Morph! *.txt
+	fmt -w 80
+MorphEnd
