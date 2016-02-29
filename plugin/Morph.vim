@@ -5,19 +5,27 @@ scriptencoding utf-8
 " ----------------------
 
 " The default location for the user morphs
-let g:Morph_UserMorphs = expand("~")."/.vim/Morphs.morph"
+if !exists("g:Morph_UserMorphs")
+	let g:Morph_UserMorphs = expand("~")."/.vim/Morphs.morph"
+endif
 
 " Whether undo should be used after morphing the file, or
 " if the morph's restore command should explicitly be used to
 " display the buffer's contents.
-let g:Morph_PostMorphRestore = 1
+if !exists("g:Morph_PostMorphRestore")
+	let g:Morph_PostMorphRestore = 1
+endif
 
 " flag to always automatically create the user's morph file
-let g:Morph_AlwaysCreateMorphFile = 0
+if !exists("g:Morph_AlwaysCreateMorphFile")
+	let g:Morph_AlwaysCreateMorphFile = 0
+endif
 
 " This is used to misc. actions, E.g. determining if a glob pattern
 " matches the current file's name.
-let g:Morph_TmpDirectory = "/tmp/morphtmp"
+if !exists("g:Morph_TmpDirectory")
+	let g:Morph_TmpDirectory = "/tmp/morphtmp"
+endif
 
 
 " --------------------
