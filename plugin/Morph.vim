@@ -1,5 +1,13 @@
 scriptencoding utf-8
 
+if expand("%:p") ==# expand("<sfile>:p")
+	unlet! s:Morph_loaded
+endif
+if exists("s:Morph_loaded") || &cp
+	finish
+endif
+let s:Morph_loaded = 1
+
 " ----------------------
 " GLOBAL VARIABLES
 " ----------------------
@@ -409,7 +417,7 @@ function! Morph#EditMorphFile(mfile)
 		call Morph#_CreateMorphFile(a:mfile)
 	endif
 
-	execute 'tabf '.a:mfile
+	execute 'edit '.a:mfile
 	execute "autocmd! BufWritePost <buffer> :call Morph#_PostMorphEdit(".was_new.")"
 endfunction
 
