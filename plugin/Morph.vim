@@ -35,16 +35,37 @@ if !exists("g:Morph_TmpDirectory")
 	let g:Morph_TmpDirectory = "/tmp/morphtmp"
 endif
 
+" If this is set, extra debug messages will be silently echom'd (and viewable
+" via :messages)
+if !exists("g:Morph_Debug")
+	let g:Morph_Debug = 0
+endif
+
 
 " --------------------
 " CORE FUNCTIONS
 " --------------------
 
+function! Morph#Debug(msg)
+	if !g:Morph_Debug
+		return
+	endif
+
+	echom "MorphDEBUG: ".a:msg
+endfunction
+
 let s:Morphs = []
 let s:MorphsRestore = {}
 let s:MorphsLoaded = {}
 function! Morph#PrepareMorph(...)
-	if a:0 == 2
+	" if PrepareMorph is being called, the buffer should always be in an
+	" un-morphed state.
+	let b:Morph_restored = 0
+
+	if a:0 == 2 && !exists("b:Morph_actions_set")
+		call Morph#Debug("adding Morph actions")
+		call Morph#Debug("    morph action (".a:1."): ".s:Morphs[a:1])
+		call Morph#Debug("  restore action (".a:2."): ".s:Morphs[a:2])
 		if ! exists("b:Morph_actions")
 			let b:Morph_actions = []
 		endif
@@ -114,7 +135,7 @@ function! Morph#PostMorph(restore_idx)
 	if g:Morph_PostMorphRestore
 		call Morph#DoMorphRestore(a:restore_idx)
 	else
-		" just undo the morph to go back to the last position
+		" just undo the morph to go back to the plaintext buffer contents
 		u
 	endif
 
@@ -122,17 +143,35 @@ function! Morph#PostMorph(restore_idx)
 endfunction
 
 function! Morph#DoMorphRestore(restore_idx)
+	" the morph actions should only ever be added once, unless
+	" the user reloads loaded morph files
+	if !exists("b:Morph_actions_set")
+		let b:Morph_actions_set = 1
+	endif
+
+	call Morph#Debug("restoring morph'd contents")
+
 	if a:restore_idx == -1
 		if exists("b:Morph_actions") && b:Morph_restored == 0
+			call Morph#Debug("b:Morph_actions exists, restoring file contents")
 			let curr_action_idx = len(b:Morph_actions)
 			while curr_action_idx > 0
 				let curr_action_idx = curr_action_idx - 1
 				let curr_morph_action = b:Morph_actions[curr_action_idx]
 				let curr_restore_cmd = s:Morphs[curr_morph_action[1]]
 				let curr_restore_cmd = Morph#_BashSingleQuoteEscape(curr_restore_cmd)
+				call Morph#Debug("  restoring with '".s:Morphs[curr_morph_action[1]]."'")
 				silent! execute "%!bash -lc '".curr_restore_cmd."'"
 			endwhile
 			call Morph#PrepareEdit()
+		else
+			if !exists("b:Morph_actions")
+				call Morph#Debug("no restores performed, b:Morph_actions not set")
+			endif
+
+			if b:Morph_restored != 0
+				call Morph#Debug("no restores performed, buffer should already be restored")
+			endif
 		endif
 		let b:Morph_restored = 1
 		return
@@ -140,6 +179,8 @@ function! Morph#DoMorphRestore(restore_idx)
 
 	let restore_cmd = s:Morphs[a:restore_idx]
 	let restore_cmd = Morph#_BashSingleQuoteEscape(restore_cmd)
+
+	call Morph#Debug("  running '".restore_cmd."'")
 	silent! execute "%!bash -lc '".restore_cmd."'"
 	call Morph#PrepareEdit()
 endfunction
@@ -480,6 +521,11 @@ endfunction
 function! Morph#RemoveMorphs()
 	" remove all Morph autocommands
 	autocmd! Morph *
+
+	let curr_buf = bufnr("%")
+	bufdo execute "unlet! b:Morph_actions_set"
+	bufdo execute "unlet! b:Morph_actions"
+	execute "b".curr_buf
 endfunction
 
 " Reload all currently loaded Morphs, from ALL loaded Morph
