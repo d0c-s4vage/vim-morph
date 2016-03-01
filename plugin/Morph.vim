@@ -409,7 +409,7 @@ function! Morph#EditMorphFile(mfile)
 		call Morph#_CreateMorphFile(a:mfile)
 	endif
 
-	execute 'tabf '.a:mfile
+	execute 'edit '.a:mfile
 	execute "autocmd! BufWritePost <buffer> :call Morph#_PostMorphEdit(".was_new.")"
 endfunction
 
