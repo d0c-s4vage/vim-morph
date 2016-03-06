@@ -75,7 +75,7 @@ openssl's aes256 functionality, one could define the `Morph` for `*.enc` files a
 Note that the commands are interpreted by `bash -lc`, so any environment variables
 and such that that would load would be available (such as `$MYPASSWORD`).
 
-#### Inline Formatting
+#### Inline Morphing
 
 To automatically wrap `*.txt` files at 80 chars, one could define a `Morph!` as:
 
@@ -88,6 +88,18 @@ To automatically replace `DATE` with the current date on file writes:
 	Morph! *.txt
 		sed "s/DATE/$(date +%m-%d-%y)/g"
 	MorphEnd
+
+#### One-Way Morphing
+
+To automatically convert all `*.md` files to a `*.html` file on file write:
+
+	Morph- *.md
+		!!markdown > %.html
+	MorphEnd
+
+Note the use of the double exclamation points (`!!`) to indicate that the `%`
+character should not be escaped. This causes vim to expand `%` to the
+current file's name.
 
 #### Base64
 
@@ -133,9 +145,15 @@ files.
 Morphs can also be inline morphs (a `Morph!`). A simple example is automatically word-wrapping all
 `*.txt` files at 80 chars.
 
+Morphs can alternatively be one-way morphs (a `Morph-`). One-way morphs send the current
+buffer contents (post-write) to a command, and DO NOT load the output of that command
+as the new buffer contents. A good example of one-way morphs would be to automatically
+save markdown files as html in a different file. Generally speaking, one-way morphs can
+be thought of as a hook into the post-file-write event after which something may be executed.
+
 ### Morphs
 
-A Morph begins with a line that starts with either `Morph` or `Morph!` and is followed by
+A Morph begins with a line that starts with either `Morph`, `Morph!`, or `Morph-` and is followed by
 a comma-separated list of filetypes (think autocmds). Note that the comma-separated list of
 filetypes should not contain whitespace.
 
@@ -148,6 +166,24 @@ Commands are defined as the non-empty line(s) in the Morph body, after comments 
 View `Morph`s contain two commands, the `morph` command, and the `restore` command (e.g. encrypt/decrypt).
 
 Inline `Morph!`s contain one command, a `morph` command (e.g. word wrap the text).
+
+One-way `Morph-`s contain one command, a `morph` command (e.g. convert the buffer contents to markdown and
+save to a different file.)
+
+#### Escaping
+
+By default, all Morph commands are escaped so that the exact command described in
+the morph will be executed in bash.
+
+If, however, you want to be able to use something like the current
+filename (`%`) in the command, you must prefix the command with double
+exclamation points:
+
+```
+Morph- *.md
+	!!md2html -o %.html
+MorphEnd
+```
 
 ### Comments
 

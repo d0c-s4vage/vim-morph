@@ -92,6 +92,8 @@ endfunction
 function! Morph#DoMorph(morph_idx)
 	call Morph#PrepareMorph()
 
+	call Morph#Debug("morphing contents")
+
 	let morph_cmd = s:Morphs[a:morph_idx]
 	let morph_cmd = Morph#_BashSingleQuoteEscape(morph_cmd)
 
@@ -102,6 +104,7 @@ function! Morph#DoMorph(morph_idx)
 		let b:Morph_last_column = col(".")
 	endif
 
+	call Morph#Debug("  morphing with '".morph_cmd."'")
 	silent! execute "%!bash -lc '".morph_cmd."'"
 endfunction
 
@@ -121,13 +124,26 @@ function! Morph#_ClearPositionVars()
 	let b:Morph_restored = 0
 endfunction
 
+function! Morph#PostOneWayMorph(morph_idx)
+	call Morph#PrepareMorph()
+	call Morph#DoMorph(a:morph_idx)
+	" always undo the morph
+	u
+	call Morph#_PostMorphRestorePosition()
+endfunction
+
 function! Morph#PostInlineMorph()
 	call Morph#_PostMorphRestorePosition()
 endfunction
 
 function! Morph#_BashSingleQuoteEscape(cmd)
 	let res = substitute(a:cmd, "'", "'\"'\"'", "g")
-	let res = substitute(res, "%", "\\\\\%", "g")
+
+	if len(res) >= 2 && strpart(res, 0, 2) == "!!"
+		let res = strpart(res, 2)
+	else
+		let res = substitute(res, "%", "\\\\\%", "g")
+	endif
 	return res
 endfunction
 
@@ -233,6 +249,21 @@ function! Morph#_CreateMorphInlineAutoCommands(filetypes, morph_cmd, buffer_auto
 	augroup end
 endfunction
 
+function! Morph#_CreateMorphOneWayAutoCommands(filetypes, morph_cmd, buffer_autos)
+	let morph_idx = len(s:Morphs)
+	call add(s:Morphs, a:morph_cmd)
+
+	if a:buffer_autos
+		let auto_opts = "<buffer>"
+	else
+		let auto_opts = a:filetypes
+	endif
+
+	augroup Morph
+		execute "autocmd BufWritePost,FileWritePost ".auto_opts." call Morph#PostOneWayMorph(".morph_idx.")"
+	augroup end
+endfunction
+
 function! Morph#_CurrBufferMatchesFiletype(filetypes)
 	let patterns = split(a:filetypes, ",")
 	let currfile = fnamemodify(expand("%"), ":t")
@@ -290,6 +321,8 @@ function! Morph#Define(...) "filetypes, morph_cmd, restore_cmd, [morph_type], [m
 		call Morph#_CreateMorphAutoCommands(filetypes, morph_cmd, restore_cmd, buffer_autos, force_prepare)
 	elseif morph_type == "Morph!"
 		call Morph#_CreateMorphInlineAutoCommands(filetypes, morph_cmd, buffer_autos)
+	elseif morph_type == "Morph-"
+		call Morph#_CreateMorphOneWayAutoCommands(filetypes, morph_cmd, buffer_autos)
 	endif
 
 	if ! has_key(s:MorphsLoaded, mfile)
@@ -338,7 +371,7 @@ function! Morph#_GetCommands(_idx, _lines, mfile)
 		elseif restore_cmd == ""
 			let restore_cmd = join(splits, " ")
 		else
-			echom "unused command '".join(splits, " ")."' in Morph ".a:mfile.":".(idx+1)." for ".filetypes
+			echom "unused command '".join(splits, " ")."' in Morph ".a:mfile.":".(idx+1)
 		endif
 	endwhile
 
@@ -357,7 +390,7 @@ function! Morph#_ValidateMorphCommands(cmds, mfile, filetypes, morph_type)
 		let morph_valid = 0
 		echom a:morph_type." in ".a:mfile." for ".a:filetypes." did not contain a morph command"
 	endif
-	if a:cmds.restore == "" && a:morph_type != "Morph!"
+	if a:cmds.restore == "" && a:morph_type != "Morph!" && a:morph_type != "Morph-"
 		let morph_valid = 0
 		echom a:morph_type." in ".a:mfile." for ".a:filetypes." did not contain a restore command"
 	endif
@@ -420,7 +453,7 @@ function! Morph#LoadMorphFile(...)
 		let line = Morph#_DiscardComments(line)
 
 		let splits = split(line)
-		if len(splits) == 2 && (splits[0] == "Morph" || splits[0] == "Morph!")
+		if len(splits) == 2 && (splits[0] == "Morph" || splits[0] == "Morph!" || splits[0] == "Morph-")
 			let morph_type = splits[0]
 			let filetypes = splits[1]
 		else
