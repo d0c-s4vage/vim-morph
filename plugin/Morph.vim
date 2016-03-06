@@ -92,6 +92,8 @@ endfunction
 function! Morph#DoMorph(morph_idx)
 	call Morph#PrepareMorph()
 
+	call Morph#Debug("morphing contents")
+
 	let morph_cmd = s:Morphs[a:morph_idx]
 	let morph_cmd = Morph#_BashSingleQuoteEscape(morph_cmd)
 
@@ -102,6 +104,7 @@ function! Morph#DoMorph(morph_idx)
 		let b:Morph_last_column = col(".")
 	endif
 
+	call Morph#Debug("  morphing with '".morph_cmd."'")
 	silent! execute "%!bash -lc '".morph_cmd."'"
 endfunction
 
@@ -127,7 +130,12 @@ endfunction
 
 function! Morph#_BashSingleQuoteEscape(cmd)
 	let res = substitute(a:cmd, "'", "'\"'\"'", "g")
-	let res = substitute(res, "%", "\\\\\%", "g")
+
+	if len(res) >= 2 && strpart(res, 0, 2) == "!!"
+		let res = strpart(res, 2)
+	else
+		let res = substitute(res, "%", "\\\\\%", "g")
+	endif
 	return res
 endfunction
 
@@ -338,7 +346,7 @@ function! Morph#_GetCommands(_idx, _lines, mfile)
 		elseif restore_cmd == ""
 			let restore_cmd = join(splits, " ")
 		else
-			echom "unused command '".join(splits, " ")."' in Morph ".a:mfile.":".(idx+1)." for ".filetypes
+			echom "unused command '".join(splits, " ")."' in Morph ".a:mfile.":".(idx+1)
 		endif
 	endwhile
 
