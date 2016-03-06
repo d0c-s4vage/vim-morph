@@ -1,5 +1,5 @@
-syntax match Morph '\v^(Morph|Morph!) '
-syntax match MorphFileTypes '\v(^Morph(!?) )@<=[^#]*'
+syntax match Morph '\v^(Morph|Morph!|Morph-) '
+syntax match MorphFileTypes '\v(^Morph([-!]?) )@<=[^#]*'
 syntax match MorphEnd '\v^MorphEnd'
 syntax match MorphComment '\v#.*$'
 
