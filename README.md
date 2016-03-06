@@ -149,6 +149,21 @@ View `Morph`s contain two commands, the `morph` command, and the `restore` comma
 
 Inline `Morph!`s contain one command, a `morph` command (e.g. word wrap the text).
 
+#### Escaping
+
+By default, all Morph commands are escaped so that the exact command described in
+the morph will be executed in bash.
+
+If, however, you want to be able to use something like the current
+filename (`%`) in the command, you must prefix the command with double
+exclamation points:
+
+```
+Morph- *.md
+	!!md2html -o %.html
+MorphEnd
+```
+
 ### Comments
 
 Comments in `.morph` files begin with a `#` sign and are valid anywhere
