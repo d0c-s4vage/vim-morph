@@ -616,6 +616,13 @@ function! Morph#LoadProjectMorphs()
 	let project_morph = ""
 	let file_base_dir = expand("%:p:h")."/"
 	let curr_file = expand("%:p")
+
+	let splits = split(curr_file, "://")
+	if len(splits) > 1
+		call Morph#Debug("curr file '".curr_file."' is a netrw file path, aborting project morph search")
+		return
+	endif
+
 	let loaded_morphs = 0
 	while 1
 		let check_path_dir = simplify(file_base_dir.dots)
