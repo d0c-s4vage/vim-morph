@@ -102,6 +102,7 @@ function! Morph#DoMorph(morph_idx)
 	if ! exists("b:Morph_last_line")
 		let b:Morph_last_line = line(".")
 		let b:Morph_last_column = col(".")
+		let b:Morph_last_view = winsaveview()
 	endif
 
 	call Morph#Debug("  morphing with '".morph_cmd."'")
@@ -111,6 +112,7 @@ endfunction
 function! Morph#_PostMorphRestorePosition()
 	" jump back to the last line/column we were at
 	execute "normal ".b:Morph_last_line."G".b:Morph_last_column."|"
+	call winrestview(b:Morph_last_view)
 endfunction
 
 function! Morph#_ClearPositionVars()
