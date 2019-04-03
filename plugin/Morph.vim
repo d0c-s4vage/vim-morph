@@ -17,6 +17,11 @@ if !exists("g:Morph_UserMorphs")
     let g:Morph_UserMorphs = expand("~")."/.vim/Morphs.morph"
 endif
 
+" The shell to run all commands in
+if !exists("g:Morph_CommandShell")
+    let g:Morph_CommandShell = "bash -lc"
+endif
+
 " Whether undo should be used after morphing the file, or
 " if the morph's restore command should explicitly be used to
 " display the buffer's contents.
@@ -83,6 +88,11 @@ function! Morph#PrepareEdit()
     setl eol
 endfunction
 
+function! Morph#ExecMorphCommand(morph_cmd)
+    call Morph#Debug("  morphing with %!".g:Morph_CommandShell." '".a:morph_cmd."'")
+    silent! execute "%!".g:Morph_CommandShell." '".a:morph_cmd." || echo VIM-MORPH COMMAND ERROR - :let Morph_Debug=1, undo, rerun, and check :messages'"
+endfunction
+
 function! Morph#DoMorph(morph_idx)
     call Morph#PrepareMorph()
 
@@ -99,8 +109,7 @@ function! Morph#DoMorph(morph_idx)
         let b:Morph_last_view = winsaveview()
     endif
 
-    call Morph#Debug("  morphing with '".morph_cmd."'")
-    silent! execute "%!bash -lc '".morph_cmd."'"
+    call Morph#ExecMorphCommand(morph_cmd)
 endfunction
 
 function! Morph#_PostMorphRestorePosition()
@@ -173,7 +182,7 @@ function! Morph#DoMorphRestore(restore_idx)
                 let curr_restore_cmd = s:Morphs[curr_morph_action[1]]
                 let curr_restore_cmd = Morph#_BashSingleQuoteEscape(curr_restore_cmd)
                 call Morph#Debug("  restoring with '".s:Morphs[curr_morph_action[1]]."'")
-                silent! execute "%!bash -lc '".curr_restore_cmd."'"
+                call Morph#ExecMorphCommand(curr_restore_cmd)
             endwhile
             call Morph#PrepareEdit()
         else
@@ -193,7 +202,7 @@ function! Morph#DoMorphRestore(restore_idx)
     let restore_cmd = Morph#_BashSingleQuoteEscape(restore_cmd)
 
     call Morph#Debug("  running '".restore_cmd."'")
-    silent! execute "%!bash -lc '".restore_cmd."'"
+    call Morph#ExecMorphCommand(restore_cmd)
     call Morph#PrepareEdit()
 endfunction
 
