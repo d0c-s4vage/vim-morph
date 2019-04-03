@@ -29,12 +29,6 @@ if !exists("g:Morph_AlwaysCreateMorphFile")
 	let g:Morph_AlwaysCreateMorphFile = 0
 endif
 
-" This is used to misc. actions, E.g. determining if a glob pattern
-" matches the current file's name.
-if !exists("g:Morph_TmpDirectory")
-	let g:Morph_TmpDirectory = "/tmp/morphtmp"
-endif
-
 " If this is set, extra debug messages will be silently echom'd (and viewable
 " via :messages)
 if !exists("g:Morph_Debug")
@@ -270,15 +264,10 @@ function! Morph#_CurrBufferMatchesFiletype(filetypes)
 	let patterns = split(a:filetypes, ",")
 	let currfile = fnamemodify(expand("%"), ":t")
 
-	silent! execute "!rm -rf ".g:Morph_TmpDirectory
-	silent! execute "!mkdir -p ".g:Morph_TmpDirectory
-	silent! execute "!touch ".g:Morph_TmpDirectory."/".currfile
-
 	for pattern in patterns
-		let matching_files = split(globpath(g:Morph_TmpDirectory, pattern), "\n")
-		if len(matching_files) > 0
-			return 1
-		endif
+        if currfile =~ glob2regpat(pattern)
+            return 1
+        endif
 	endfor
 
 	return 0
