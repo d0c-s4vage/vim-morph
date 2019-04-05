@@ -27,11 +27,11 @@ Global variables:
 * `g:Morph_AlwaysCreateMorphFile` - default is `0`. Says whether the default user morph file should always be created. Default is to only create it on the first use of the `:MorphEdit` command.
 * `g:Morph_TmpDirectory` - default it `/tmp/morphtmp` and is used for misc stuff
 
-### Examples
+## Examples
 
 Run `:MorphEdit` to open the default morph file
 
-#### GPG
+### GPG
 
 To add a `Morph` that automatically encrypts and decrypts
 gpg-encrypted files, one could define the `Morph` for `*.gpg` files as:
@@ -62,7 +62,7 @@ in the correct order: writes by doing `gpg | base64` and restores by doing
 		base64 -d
 	MorphEnd
 
-#### AES-256
+### AES-256
 
 To add a `Morph` that automatically encrypts and decrypts data using
 openssl's aes256 functionality, one could define the `Morph` for `*.enc` files as:
@@ -75,7 +75,7 @@ openssl's aes256 functionality, one could define the `Morph` for `*.enc` files a
 Note that the commands are interpreted by `bash -lc`, so any environment variables
 and such that that would load would be available (such as `$MYPASSWORD`).
 
-#### Inline Morphing
+### Inline Morphing
 
 To automatically wrap `*.txt` files at 80 chars, one could define a `Morph!` as:
 
@@ -89,7 +89,7 @@ To automatically replace `DATE` with the current date on file writes:
 		sed "s/DATE/$(date +%m-%d-%y)/g"
 	MorphEnd
 
-#### One-Way Morphing
+### One-Way Morphing
 
 To automatically convert all `*.md` files to a `*.html` file on file write:
 
@@ -101,7 +101,7 @@ Note the use of the double exclamation points (`!!`) to indicate that the `%`
 character should not be escaped. This causes vim to expand `%` to the
 current file's name.
 
-#### Base64
+### Base64
 
 To automatically decode base64 files (I have no idea if there is a common file extension
 for base64 encoded files), one could define a `Morph` as:
@@ -111,7 +111,7 @@ for base64 encoded files), one could define a `Morph` as:
 		base64 -d
 	MorphEnd
 
-#### Tabs vs Spaces
+### Tabs vs Spaces
 
 To automatically convert all tabs to spaces while editing
 a file but converting the spaces back to tabs again when saving, a `Morph` could be
@@ -132,6 +132,13 @@ I recommend you use a vim plugin manager such as [pathogen](https://github.com/t
 Once pathogen is setup, git clone vim-morph into the `~/.vim/bundle` directory:
 
 	git clone https://github.com/d0c-s4vage/vim-morph.git ~/.vim/bundle
+
+## Error Handling
+
+Currently, vim-morph will display an error message if one of the morph commands
+did not exit cleanly:
+
+![vim-morph-wrong-password](https://user-images.githubusercontent.com/5090146/55602359-023f9b80-571a-11e9-8592-ee60ebb8284e.gif)
 
 ## Morph File Details
 
